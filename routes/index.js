@@ -4,14 +4,7 @@
  */
 
 var https = require('https');
-var options = {
-	hostname: 'www.ingtfi.pl',
-	port: 443,
-	path: '/fundusze-akcji/ing-akcji?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=1&startDate=2010-02-05&endDate=2014-02-05',
-	method: 'GET',
-	rejectUnauthorized:false,
-	strictSSL:false  
-};
+var async = require('async');
 
 var getData = function(options, callback) {
 	var data = '';
@@ -54,15 +47,52 @@ var getData = function(options, callback) {
 };
 
 exports.data = function(req, res){
-	getData(options, function(code, series, error){
-		if(error != null) {
+	var seriesOptions = [];
+	var errors = [];
+	
+	async.series([
+            function(callback){ 
+            	getData('https://www.ingtfi.pl/fundusze-akcji/ing-akcji?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=1&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
+            		if(error != null) {
+            			errors.push(error);
+            			callback(error);
+            		} else {
+            			seriesOptions.push(series);
+            			callback(null);
+            		}
+            	});
+            },
+            function(callback){
+            	getData('https://www.ingtfi.pl/fundusze-gotowkowe/ing-gotowkowy?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=8&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
+            		if(error != null) {
+            			errors.push(error);
+            			callback(error);
+            		} else {
+            			seriesOptions.push(series);
+            			callback(null);
+            		}
+            	});	                	
+            },
+            function(callback){
+            	getData('https://www.ingtfi.pl/fundusze-akcji/ing-japonia?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=27&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
+            		if(error != null) {
+            			errors.push(error);
+            			callback(error);
+            		} else {
+            			seriesOptions.push(series);
+            			callback(null);
+            		}
+            	});	                	
+            }
+        ], function(){
+		if(errors.lenght > 0) {
 			res.send(404);
 		} else {
 			res.set('Content-Type', 'application/javascript');
-			res.send(200, series);
-		}
-	});
-}
+			res.send(200, seriesOptions);										
+		}		
+	});	
+};
 
 exports.index = function(req, res){
 	res.render('index', {});		

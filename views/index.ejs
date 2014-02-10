@@ -15,12 +15,9 @@
 			$.getJSON('/data.jsonp', function(data) {
 				$('#container').highcharts('StockChart', {
 					rangeSelector : {
-						selected : 1
+						selected : 4
 					},
-					series : [{
-						name : data.name,
-						data : data.data
-					}]
+					series : data
 				});
 			});
 		});  	
