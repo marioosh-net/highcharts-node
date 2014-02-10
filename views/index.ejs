@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  	<script src="/javascripts/jquery.min.js"></script>
+	<script src="/javascripts/highstock.js"></script>
+	<script src="/javascripts/exporting.js"></script>
+    <title>charts</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+  	<div id="container" style="height: 500px; min-width: 500px"></div>
+  	<script>
+		$(function () { 
+			$.getJSON('/data.jsonp', function(data) {
+				$('#container').highcharts('StockChart', {
+					rangeSelector : {
+						selected : 1
+					},
+					series : [{
+						name : data.name,
+						data : data.data
+					}]
+				});
+			});
+		});  	
+  	</script>
+  </body>
+</html>
