@@ -13,17 +13,40 @@
 
   	<div id="container" style="height: 500px; min-width: 500px"></div>
   	<script>
-		$(function () { 
-			$.getJSON('/data.jsonp', function(data) {
-			     if(data != null && data.length > 0) {
+		$(function () {
+		  
+		    var getData = function(){
+                var lj = [];
+                $('.lj').each(function(i){
+                    lj[i] = 1;
+                    if($(this).val()!='') {
+                        lj[i] = parseFloat($(this).val());
+                    }
+                });
+                var ch = [];
+                $('.ch').each(function(i){
+                    ch[i] = 0;
+                    if($(this).is(':checked')) {
+                        ch[i] = 1;
+                    }
+                });
+    			$.getJSON('/data.jsonp', {lj:lj, ch:ch}, function(data) {
 				    $('#container').highcharts('StockChart', {
 					   rangeSelector : {
 						  selected : 4
 					   },
 					   series : data
 				    });
-				}
+    			});
+			}
+			
+			getData();
+			$('.lj').change(function(){
+			     getData();
 			});
+            $('.ch').change(function(){
+                 getData();
+            });			
 			
 			$('.del').click(function(){
 			     var urlToDel = $(this).siblings('input').attr('url');

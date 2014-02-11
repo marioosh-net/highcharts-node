@@ -6,6 +6,7 @@
 var https = require('https');
 var async = require('async');
 var fs = require("fs");
+var urlp = require('url');
 
 /**
  * save settings into settings.json
@@ -18,14 +19,18 @@ var writeSettings = function(settings, callback){
  * get CSV stock data, parse and produce JSON
  */
 var getData = function(options, callback) {
-	var url = options.url;
-	var data = '';
-	var ing = https.request(url, function(res1){
+	
+	var parsed = urlp.parse(options.url);
+	parsed.rejectUnauthorized = false;
+	parsed.strictSSL = false;
+
+	var ing = https.request(parsed, function(res1){
+		var data = '';
 		res1.on('data', function(chunk) {
     		data += chunk;
 	  	});	
 		res1.on('end', function(d) {
-			console.log(res1.headers['content-type']);
+			// console.log(res1.headers['content-type']);
 			if(res1.statusCode != '200') {
 				callback(res1.statusCode);
 			} else {
@@ -39,8 +44,12 @@ var getData = function(options, callback) {
 			        if (lineNo != 0) {
 			        	if(items[0] != '') {
 							var date = new Date(items[0]); // some mock date
-							var ms = date.getTime(); 
-				        	series.data.push([ms,parseFloat(items[1])]);
+							var ms = date.getTime();
+							var w = parseFloat(items[1]);
+							if(options.lj != null) {
+								w = w * options.lj; 
+							}							
+				        	series.data.push([ms,w]);
 			        	}
 			        } else {
 			        	if(options.name != null) {
@@ -71,6 +80,9 @@ exports.data = function(req, res){
 	var seriesOptions = [];
 	var errors = [];
 	
+	var lj = req.query.lj; // lj
+	var ch = req.query.ch; // checked
+	
 	/**
 	 * load urls from settings.json
 	 * and create array of functions to get data from that urls
@@ -78,18 +90,24 @@ exports.data = function(req, res){
 	var series = [];
 	var settings = require('../settings.json');
 	if(settings.urls != null) {
-		settings.urls.forEach(function (u) {
-			series.push(function(callback){
-            	getData({url:u.url, name:u.name}, function(code, series, error){
-        		if(error != null) {
-        			errors.push(error);
-        			callback(error);
-        		} else {
-        			seriesOptions.push(series);
-        			callback(null);
-        		}
-        	    });				
-			});
+		settings.urls.forEach(function (u,index) {
+			if(ch[index] == 1) {
+				series.push(function(callback){
+					var lj1 = 1;
+					if(lj[index] != null) {
+						lj1 = lj[index];
+					}
+	            	getData({url:u.url, name:u.name, lj: lj1}, function(code, series, error){
+	        		if(error != null) {
+	        			errors.push(error);
+	        			callback(error);
+	        		} else {
+	        			seriesOptions.push(series);
+	        			callback(null);
+	        		}
+	        	    });				
+				});
+			}
 		});
 	}	
 	

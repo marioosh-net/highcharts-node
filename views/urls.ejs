@@ -7,6 +7,6 @@
 </div>
 <div>
    <% if(urls != null) {for(var i=0; i<urls.length; i++) {%>
-       <li><input type="checkbox" name="ch<%=i%>" url="<%=urls[i].url%>"/><span class="nf"><%=urls[i].name != '' ? urls[i].name : urls[i].url%></span><input class="lj" type="text" name="lj<%=i%>"/><a href="#" class="del">del</a></li>
+       <li><input type="checkbox" name="ch<%=i%>" url="<%=urls[i].url%>" class="ch" checked /><span class="nf"><%=urls[i].name != '' ? urls[i].name : urls[i].url%></span><input class="lj" type="text" name="lj<%=i%>"/><a href="#" class="del">del</a></li>
    <% }} %>
 </div>    
