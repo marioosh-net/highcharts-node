@@ -1,3 +1,16 @@
 {
-  "urls": []
+  "urls": [
+    {
+      "url": "https://www.ingtfi.pl/fundusze-akcji/ing-japonia?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=27&startDate=2000-02-06&endDate=2114-02-06",
+      "name": "Japonia"
+    },
+    {
+      "url": "https://www.ingtfi.pl/fundusze-akcji/ing-akcji?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=1&startDate=2000-02-06&endDate=2114-02-06",
+      "name": "Akcje"
+    },
+    {
+      "url": "https://www.ingtfi.pl/fundusze-gotowkowe/ing-gotowkowy?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=8&startDate=2000-02-06&endDate=2114-02-06",
+      "name": "Gotówkowy"
+    }
+  ]
 }
