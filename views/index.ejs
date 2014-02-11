@@ -15,22 +15,26 @@
   	<script>
 		$(function () {
 		  
-		    var getData = function(){
-                var lj = [];
-                $('.lj').each(function(i){
-                    lj[i] = 1;
-                    if($(this).val()!='') {
-                        lj[i] = parseFloat($(this).val());
-                    }
-                });
-                var ch = [];
-                $('.ch').each(function(i){
-                    ch[i] = 0;
-                    if($(this).is(':checked')) {
-                        ch[i] = 1;
-                    }
-                });
-    			$.getJSON('/data.jsonp', {lj:lj, ch:ch}, function(data) {
+		    var getData = function(change){
+		         var data = null;
+		         if(change) {
+                    var lj = [];
+                    $('.lj').each(function(i){
+                        lj[i] = 1;
+                        if($(this).val()!='') {
+                            lj[i] = parseFloat($(this).val());
+                        }
+                    });
+                    var ch = [];
+                    $('.ch').each(function(i){
+                        ch[i] = 0;
+                        if($(this).is(':checked')) {
+                            ch[i] = 1;
+                        }
+                    });
+                    data = {lj:lj, ch:ch};
+                }
+    			$.getJSON('/data.jsonp', data, function(data) {
 				    $('#container').highcharts('StockChart', {
 					   rangeSelector : {
 						  selected : 4
@@ -40,12 +44,12 @@
     			});
 			}
 			
-			getData();
+			getData(false);
 			$('.lj').change(function(){
-			     getData();
+			     getData(true);
 			});
             $('.ch').change(function(){
-                 getData();
+                 getData(true);
             });			
 			
 			$('.del').click(function(){

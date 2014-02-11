@@ -91,10 +91,10 @@ exports.data = function(req, res){
 	var settings = require('../settings.json');
 	if(settings.urls != null) {
 		settings.urls.forEach(function (u,index) {
-			if(ch[index] == 1) {
+			if(ch == null || ch[index] == 1) {
 				series.push(function(callback){
 					var lj1 = 1;
-					if(lj[index] != null) {
+					if(lj != null && lj[index] != null) {
 						lj1 = lj[index];
 					}
 	            	getData({url:u.url, name:u.name, lj: lj1}, function(code, series, error){
