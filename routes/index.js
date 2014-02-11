@@ -19,8 +19,8 @@ var writeSettings = function(settings, callback){
  * get CSV stock data, parse and produce JSON
  */
 var getData = function(options, callback) {
-	
-	console.log('get data from '+options.url);
+
+	console.log("get data from "+options.url);
 	
 	var parsed = urlp.parse(options.url);
 	parsed.rejectUnauthorized = false;
@@ -84,59 +84,46 @@ exports.data = function(req, res){
 	
 	var lj = req.query.lj; // lj
 	var ch = req.query.ch; // checked
-
-	fs.exists('./data.json', function(exists){
-		if(exists) {
-			/**
-			 * load cached data from data.json
-			 */
-			seriesOptions = require('../data.json');
-			res.set('Content-Type', 'application/javascript');
-			res.send(200, seriesOptions);			
-		} else {
-			/**
-			 * load urls from settings.json
-			 * and create array of functions to get data from that urls
-			 */
-			var series = [];
-			var settings = require('../settings.json');
-			if(settings.urls != null) {
-				settings.urls.forEach(function (u,index) {
-					if(ch == null || ch[index] == 1) {
-						series.push(function(callback){
-							var lj1 = 1;
-							if(lj != null && lj[index] != null) {
-								lj1 = lj[index];
-							}
-			            	getData({url:u.url, name:u.name, lj: lj1}, function(code, series, error){
-			        		if(error != null) {
-			        			errors.push(error);
-			        			callback(error);
-			        		} else {
-			        			seriesOptions.push(series);
-			        			callback(null);
-			        		}
-			        	    });				
-						});
+	
+	/**
+	 * load urls from settings.json
+	 * and create array of functions to get data from that urls
+	 */
+	var series = [];
+	var settings = require('../settings.json');
+	if(settings.urls != null) {
+		settings.urls.forEach(function (u,index) {
+			if(ch == null || ch[index] == 1) {
+				series.push(function(callback){
+					var lj1 = 1;
+					if(lj != null && lj[index] != null) {
+						lj1 = lj[index];
 					}
+	            	getData({url:u.url, name:u.name, lj: lj1}, function(code, series, error){
+	        		if(error != null) {
+	        			errors.push(error);
+	        			callback(error);
+	        		} else {
+	        			seriesOptions.push(series);
+	        			callback(null);
+	        		}
+	        	    });				
 				});
-			}	
-			
-			/**
-			 * call getData functions in series
-			 */
-			async.series(series, function(){
-				if(errors.lenght > 0) {
-					res.send(404);
-				} else {
-					fs.writeFile('./data.json', JSON.stringify(seriesOptions,null,2), "utf8", function(){
-						res.set('Content-Type', 'application/javascript');
-						res.send(200, seriesOptions);										
-					});
-				}		
-			});			
-		}
-	});
+			}
+		});
+	}	
+	
+	/**
+	 * call getData functions in series
+	 */
+	async.series(series, function(){
+		if(errors.lenght > 0) {
+			res.send(404);
+		} else {
+			res.set('Content-Type', 'application/javascript');
+			res.send(200, seriesOptions);										
+		}		
+	});	
 };
 
 /**
@@ -198,17 +185,6 @@ exports.delurl = function(req, res) {
 		});
 	}	
 	writeSettings(settings, function(){
-		fs.unlink('./data.json');
 		res.redirect('/');
 	});		
-};
-
-/**
- * delete data.json
- */
-exports.clear = function(req, res) {
-	fs.unlink('./data.json', function(){
-		console.log('data.json deleted')
-		res.redirect('/');
-	});
 };

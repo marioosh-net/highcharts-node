@@ -25,19 +25,15 @@
                             lj[i] = parseFloat($(this).val());
                         }
                     });
-                    var ch = [];
-                    $('.ch').each(function(i){
-                        ch[i] = 0;
-                        if($(this).is(':checked')) {
-                            ch[i] = 1;
-                        }
-                    });
-                    data = {lj:lj, ch:ch};
+                    data = {lj:lj};
                 }
     			$.getJSON('/data.jsonp', data, function(data) {
 				    $('#container').highcharts('StockChart', {
 					   rangeSelector : {
 						  selected : 4
+					   },
+					   legend: {
+					       enabled: true
 					   },
 					   series : data
 				    });
@@ -48,12 +44,8 @@
 			$('.lj').change(function(){
 			     getData(true);
 			});
-            $('.ch').change(function(){
-                 getData(true);
-            });			
-			
 			$('.del').click(function(){
-			     var urlToDel = $(this).siblings('input').attr('url');
+			     var urlToDel = $(this).siblings('span.nf').attr('url');
 			     $.post('/delurl',{
 			         url:urlToDel
 			     },function(){
