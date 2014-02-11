@@ -9,16 +9,30 @@
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
   <body>
+    <%- include urls.ejs %>
+
   	<div id="container" style="height: 500px; min-width: 500px"></div>
   	<script>
 		$(function () { 
 			$.getJSON('/data.jsonp', function(data) {
-				$('#container').highcharts('StockChart', {
-					rangeSelector : {
-						selected : 4
-					},
-					series : data
-				});
+			     if(data != null && data.length > 0) {
+				    $('#container').highcharts('StockChart', {
+					   rangeSelector : {
+						  selected : 4
+					   },
+					   series : data
+				    });
+				}
+			});
+			
+			$('.del').click(function(){
+			     var urlToDel = $(this).siblings('input').attr('url');
+			     $.post('/delurl',{
+			         url:urlToDel
+			     },function(){
+			         console.log('deleted');
+			         window.location.replace("/");
+			     });
 			});
 		});  	
   	</script>

@@ -5,10 +5,22 @@
 
 var https = require('https');
 var async = require('async');
+var fs = require("fs");
 
+/**
+ * save settings into settings.json
+ */
+var writeSettings = function(settings, callback){
+	fs.writeFile('./settings.json', JSON.stringify(settings,null,2), "utf8", callback);	
+};
+
+/**
+ * get CSV stock data, parse and produce JSON
+ */
 var getData = function(options, callback) {
+	var url = options.url;
 	var data = '';
-	var ing = https.request(options, function(res1){
+	var ing = https.request(url, function(res1){
 		res1.on('data', function(chunk) {
     		data += chunk;
 	  	});	
@@ -31,7 +43,11 @@ var getData = function(options, callback) {
 				        	series.data.push([ms,parseFloat(items[1])]);
 			        	}
 			        } else {
-			        	series.name = items[1].replace(/^.*dla /gi, "");
+			        	if(options.name != null) {
+			        		series.name = options.name;
+			        	} else {
+			        		series.name = items[1].replace(/^.*dla /gi, "");
+			        	}
 			        }            	
 	            	lineNo++;
 	            });
@@ -46,45 +62,41 @@ var getData = function(options, callback) {
 	});
 };
 
+/**
+ * call getData with urls readed from settings.json
+ * return JSON to use with Highcharts
+ * used in index template ($.getJSON...)
+ */
 exports.data = function(req, res){
 	var seriesOptions = [];
 	var errors = [];
 	
-	async.series([
-            function(callback){ 
-            	getData('https://www.ingtfi.pl/fundusze-akcji/ing-akcji?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=1&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
-            		if(error != null) {
-            			errors.push(error);
-            			callback(error);
-            		} else {
-            			seriesOptions.push(series);
-            			callback(null);
-            		}
-            	});
-            },
-            function(callback){
-            	getData('https://www.ingtfi.pl/fundusze-gotowkowe/ing-gotowkowy?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=8&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
-            		if(error != null) {
-            			errors.push(error);
-            			callback(error);
-            		} else {
-            			seriesOptions.push(series);
-            			callback(null);
-            		}
-            	});	                	
-            },
-            function(callback){
-            	getData('https://www.ingtfi.pl/fundusze-akcji/ing-japonia?action=quotes.getQuotesCsv&unitCategoryId=1&fundIds=27&startDate=2013-02-06&endDate=2014-02-06', function(code, series, error){
-            		if(error != null) {
-            			errors.push(error);
-            			callback(error);
-            		} else {
-            			seriesOptions.push(series);
-            			callback(null);
-            		}
-            	});	                	
-            }
-        ], function(){
+	/**
+	 * load urls from settings.json
+	 * and create array of functions to get data from that urls
+	 */
+	var series = [];
+	var settings = require('../settings.json');
+	if(settings.urls != null) {
+		settings.urls.forEach(function (u) {
+			series.push(function(callback){
+            	getData({url:u.url, name:u.name}, function(code, series, error){
+        		if(error != null) {
+        			errors.push(error);
+        			callback(error);
+        		} else {
+        			seriesOptions.push(series);
+        			callback(null);
+        		}
+        	    });				
+			});
+		});
+	}	
+	
+	/**
+	 * call getData functions in series
+	 */
+	async.series(series, function(){
 		if(errors.lenght > 0) {
 			res.send(404);
 		} else {
@@ -94,6 +106,65 @@ exports.data = function(req, res){
 	});	
 };
 
+/**
+ * render index
+ * with list of urls 
+ */
 exports.index = function(req, res){
-	res.render('index', {});		
+	var settings = require('../settings.json');
+	res.render('index', {
+		urls:settings.urls
+	});		
+};
+
+/**
+ * add url to settings.json
+ */
+exports.addurl = function(req, res) {
+	var settings = require('../settings.json');
+	
+	/**
+	 * post params
+	 */
+	var url = req.body.url;
+	var name = req.body.name;
+	
+	var exists = false;
+	if(settings.urls != null) {
+		settings.urls.forEach(function (u) {
+			if(url == u.url) {
+				exists = true;
+			}
+		});
+	}
+	if(exists == false) {
+		if(settings.urls == null) {
+			settings.urls = [];
+		}
+		settings.urls.push({url:url,name:name});
+	}	
+	writeSettings(settings, function(){
+		res.redirect('/');
+	});
+};
+
+/**
+ * delete url from settings.json
+ */
+exports.delurl = function(req, res) {
+	var settings = require('../settings.json');
+	var url = req.body.url;
+	if(settings.urls != null) {
+		var i = 0;
+		settings.urls.forEach(function (u) {
+			if(url == u.url) {
+				exists = true;
+				settings.urls.splice(i,1);
+			}
+			i++;
+		});
+	}	
+	writeSettings(settings, function(){
+		res.redirect('/');
+	});		
 };

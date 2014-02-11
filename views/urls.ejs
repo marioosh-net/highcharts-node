@@ -1,0 +1,12 @@
+<div>
+    <form method="post" action="/addurl">
+        <input type="text" name="url" style="width: 500px;"/>
+        <input type="text" name="name"/>
+        <input type="submit" value="Add URL"/>
+    </form>
+</div>
+<div>
+   <% if(urls != null) {for(var i=0; i<urls.length; i++) {%>
+       <li><input type="checkbox" name="ch<%=i%>" url="<%=urls[i].url%>"/><span class="nf"><%=urls[i].name != '' ? urls[i].name : urls[i].url%></span><input class="lj" type="text" name="lj<%=i%>"/><a href="#" class="del">del</a></li>
+   <% }} %>
+</div>    
